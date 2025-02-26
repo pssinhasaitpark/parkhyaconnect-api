@@ -1,0 +1,42 @@
+{
+  "name": "parkhyaconnect-api",
+  "version": "1.0.0",
+  "description": "Parkhya Connect is a communication and project management platform for organizations. It enables direct messaging, group chats, project collaboration, and task management in one place. Built with Node.js, Express, Prisma, PostgreSQL, Kafka, and Socket.io for real-time communication.",
+  "homepage": "https://github.com/pssinhasaitpark/parkhyaconnect-api#readme",
+  "bugs": {
+    "url": "https://github.com/pssinhasaitpark/parkhyaconnect-api/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pssinhasaitpark/parkhyaconnect-api.git"
+  },
+  "license": "ISC",
+  "author": "Parkhya Solutions",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "prisma": {
+    "schema": "app/prisma/schema.prisma"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.21.2",
+    "kafkajs": "^2.2.4",
+    "prisma": "^6.4.1",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.4.1",
+    "@types/cors": "^2.8.14",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.12",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.2.2"
+  }
+}
