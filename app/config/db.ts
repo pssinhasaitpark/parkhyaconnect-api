@@ -1,5 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-import config from './config'; // Adjust the path as necessary
+import { PrismaClient } from "@prisma/client";
+import config from "./config";
 
 const prisma = new PrismaClient({
   datasources: {
