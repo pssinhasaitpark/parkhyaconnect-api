@@ -7,7 +7,6 @@ import jwt from "jsonwebtoken";
 import { uploadImageToCloudinary } from "../helpers/cloudinaryConfig";
 import { sendResetPasswordEmail } from "../helpers/emailService";
 
-
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export const register = async (req: Request, res: Response) => {
@@ -182,13 +181,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: "15m" });
 
-    // Save token in DB
     const isTokenSaved = await userService.saveResetToken(email, token);
     if (!isTokenSaved) {
       throw new Error("Failed to save reset token");
     }
 
-    // Send email with reset link
     await sendResetPasswordEmail(email, token);
 
     return responseHandler(res, 200, "Password reset link sent to your email.");
@@ -205,10 +202,18 @@ export const resetPassword = async (req: Request, res: Response) => {
     const { token, newPassword, confirmPassword } = req.body;
 
     if (!token || !newPassword || !confirmPassword) {
-      return responseHandler(res, 400, "Token, new password, and confirm password are required");
+      return responseHandler(
+        res,
+        400,
+        "Token, new password, and confirm password are required"
+      );
     }
     if (newPassword.length < 8) {
-      return responseHandler(res, 400, "Password must be at least 8 characters long");
+      return responseHandler(
+        res,
+        400,
+        "Password must be at least 8 characters long"
+      );
     }
 
     if (newPassword !== confirmPassword) {
@@ -220,7 +225,6 @@ export const resetPassword = async (req: Request, res: Response) => {
       return responseHandler(res, 400, "Invalid or expired token");
     }
 
-    // Hash the new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await userService.updatePassword(decoded.email, hashedPassword);
 
@@ -232,5 +236,3 @@ export const resetPassword = async (req: Request, res: Response) => {
     });
   }
 };
-
-
