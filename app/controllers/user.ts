@@ -3,21 +3,6 @@ import * as userService from "../services/user.service";
 import { responseHandler } from "../utils/responseHandler";
 import { uploadImageToCloudinary } from "../helpers/cloudinaryConfig";
 
-export const createUser = async (req: Request, res: Response) => {
-  try {
-    const user = await userService.createUser(req.body);
-    responseHandler(res, 201, "User created successfully", user);
-  } catch (error) {
-    console.error("Error details:", error);
-    if (
-      error.message === "User with this email or mobile number already exists."
-    ) {
-      responseHandler(res, 409, error.message);
-    } else {
-      responseHandler(res, 400, "Error creating user", error);
-    }
-  }
-};
 
 export const getUsers = async (req: Request, res: Response) => {
   try {
