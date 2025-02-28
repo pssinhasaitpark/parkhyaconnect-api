@@ -76,3 +76,49 @@ export const updateUser = async (id: string, data: { socialId?: string }) => {
 export const deleteUser = async (id: string) => {
   return await prisma.user.delete({ where: { id } });
 };
+
+export const saveResetToken = async (email: string, token: string) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { email } });
+
+    if (!user) {
+      console.error("No user found with this email");
+      return false;
+    }
+
+    await prisma.user.update({
+      where: { email },
+      data: { resetToken: token },
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error saving reset token:", error);
+    return false;
+  }
+};
+
+export const updatePassword = async (email: string, newPassword: string) => {
+  return await prisma.user.update({
+    where: { email },
+    data: { password: newPassword },
+  });
+};
+
+export const findUserByMobile = async (mobileNumber: string) => {
+  return await prisma.user.findUnique({
+    where: { mobileNumber },
+  });
+};
+
+export const verifyResetToken = async (email: string, token: string) => {
+  const storedToken = await db.resetTokens.findFirst({
+    where: { email, token },
+  });
+
+  return !!storedToken;
+};
+
+export const deleteResetToken = async (email: string) => {
+  await db.resetTokens.deleteMany({ where: { email } });
+};
