@@ -6,13 +6,22 @@ import http from "http";
 import { Server } from "socket.io";
 import userRoutes from "./app/routes/user";
 import authRoutes from "./app/routes/auth";
+import messageRoutes from "./app/routes/message";
 import { initKafka, producer } from "./app/kafka/kafka";
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+    credentials: true,  
+  },
+});
 
 const KAFKA_ENABLED = process.env.KAFKA_ENABLED === "true";
 
@@ -22,6 +31,7 @@ app.use(morgan("dev"));
 
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.get("/", (req: Request, res: Response) => {
   res.status(200).send({
@@ -44,7 +54,9 @@ io.on("connection", (socket) => {
   console.log("A user connected");
 
   socket.on("sendMessage", async (data) => {
-    const { content, senderId } = data;
+    console.log("Received message:", data);
+
+    const { content, senderId } = { content: data, senderId: socket.id }; 
 
     if (KAFKA_ENABLED) {
       try {
