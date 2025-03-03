@@ -66,10 +66,22 @@ export const getUserById = async (id: string) => {
   return await prisma.user.findUnique({ where: { id } });
 };
 
+
 export const updateUser = async (id: string, data: { socialId?: string }) => {
   return await prisma.user.update({
     where: { id },
     data,
+  });
+};
+
+export const updateUserStatus = async (userId: string, isOnline: boolean) => {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new Error("User  not found");
+  }
+  return await prisma.user.update({
+    where: { id: userId },
+    data: { isOnline },
   });
 };
 
@@ -122,3 +134,4 @@ export const verifyResetToken = async (email: string, token: string) => {
 export const deleteResetToken = async (email: string) => {
   await db.resetTokens.deleteMany({ where: { email } });
 };
+

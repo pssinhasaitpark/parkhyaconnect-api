@@ -5,7 +5,7 @@ export interface Message {
   updated_at: Date;
   senderId: string;
   receiverId: string;
-  isPrivate: boolean; 
+  isPrivate: boolean;
   sender: User;
   receiver: User;
 }

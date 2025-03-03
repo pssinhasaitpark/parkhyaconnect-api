@@ -7,10 +7,14 @@ model User {
   avatar       String?
   socialId     String?  @unique
   status       String   @default("active")
+  isOnline     Boolean  @default(false)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
   resetToken   String?
 
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+
+  createdChannels    Channel[]       @relation("CreatedChannels")
+  channelMemberships ChannelMember[]
 }

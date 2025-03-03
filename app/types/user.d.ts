@@ -3,16 +3,18 @@ export interface IUser {
   fullName?: string;
   email: string;
   password: string;
+  mobileNumber?: string;
   socialId?: string;
   avatar?: string;
-  created_at?: Date;
-  updated_at?: Date;
+  readonly created_at?: Date;
+  readonly updated_at?: Date;
 }
 
 export interface IUserCreate {
   fullName?: string;
   email: string;
   password: string;
+  mobileNumber?: string;
   socialId?: string;
   avatar?: string;
 }
@@ -20,6 +22,8 @@ export interface IUserCreate {
 export interface IUserUpdate {
   fullName?: string;
   email?: string;
+  password?: string;
+  mobileNumber?: string;
   socialId?: string;
   avatar?: string;
 }
@@ -32,5 +36,14 @@ export interface ISocialLoginPayload {
     email: string;
     name?: string;
     picture?: string;
+  };
+}
+
+export interface IAuthResponse {
+  status: number;
+  message: string;
+  data: {
+    user: IUser;
+    token: string;
   };
 }
