@@ -14,14 +14,17 @@ model Message {
   updated_at DateTime @updatedAt
 
   senderId   String
-  receiverId String
+  receiverId String?
 
   type String
 
-  sender   User @relation("SentMessages", fields: [senderId], references: [id])
-  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  sender   User  @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User? @relation("ReceivedMessages", fields: [receiverId], references: [id])
 
- @@index([type])
+  channelId String?
+  channel   Channel? @relation(fields: [channelId], references: [id])
+
+  @@index([type])
 }
 
 model User {
@@ -33,10 +36,42 @@ model User {
   avatar       String?
   socialId     String?  @unique
   status       String   @default("active")
+  isOnline     Boolean  @default(false)
   created_at   DateTime @default(now())
   updated_at   DateTime @updatedAt
   resetToken   String?
 
   sentMessages     Message[] @relation("SentMessages")
   receivedMessages Message[] @relation("ReceivedMessages")
+
+  createdChannels    Channel[]       @relation("CreatedChannels")
+  channelMemberships ChannelMember[]
+}
+
+model Channel {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  isPrivate   Boolean  @default(false)
+  createdBy   String
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  creator  User            @relation("CreatedChannels", fields: [createdBy], references: [id])
+  messages Message[]       @relation
+  members  ChannelMember[]
+}
+
+model ChannelMember {
+  id         String   @id @default(uuid())
+  channelId  String
+  userId     String
+  role       String   @default("member") // "admin" or "member"
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([channelId, userId])
 }
