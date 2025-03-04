@@ -5,7 +5,7 @@ export interface IUser {
   password: string;
   mobileNumber?: string;
   socialId?: string;
-  avatar?: string;
+  avatar?: string| null;
   readonly created_at?: Date;
   readonly updated_at?: Date;
 }
@@ -16,7 +16,7 @@ export interface IUserCreate {
   password: string;
   mobileNumber?: string;
   socialId?: string;
-  avatar?: string;
+  avatar?: string| null;
 }
 
 export interface IUserUpdate {
@@ -25,7 +25,7 @@ export interface IUserUpdate {
   password?: string;
   mobileNumber?: string;
   socialId?: string;
-  avatar?: string;
+  avatar?: string| null;
 }
 
 export interface ISocialLoginPayload {
@@ -46,4 +46,16 @@ export interface IAuthResponse {
     user: IUser;
     token: string;
   };
+}
+
+export interface Message {
+  id: string;
+  content: string;
+  created_at: Date;
+  updated_at: Date;
+  senderId: string;
+  receiverId: string;
+  isPrivate: boolean;
+  sender: User;
+  receiver: User;
 }

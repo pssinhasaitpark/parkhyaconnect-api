@@ -29,7 +29,10 @@ export const authenticate = (
       });
     }
 
-    req.user = decoded;
+    req.user = {
+      id: (decoded as any).id,
+      email: (decoded as any).email,
+    };
     next();
   });
 };

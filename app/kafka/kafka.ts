@@ -31,6 +31,10 @@ export const initKafka = async (io: Server) => {
 
     console.log("Kafka connection established successfully");
   } catch (error) {
-    console.error("Failed to connect to Kafka:", error.message);
+    if (error instanceof Error) {
+      console.error("Failed to connect to Kafka:", error.message);
+    } else {
+      console.error("Failed to connect to Kafka:", error);
+    }
   }
 };
