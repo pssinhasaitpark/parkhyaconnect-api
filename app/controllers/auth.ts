@@ -6,6 +6,9 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { uploadImageToCloudinary } from "../helpers/cloudinaryConfig";
 import { sendResetPasswordEmail } from "../helpers/emailService";
+import { CustomError } from "../types/customError";
+
+import { io } from "../../app";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
@@ -43,10 +46,16 @@ export const register = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    let avatarUrl: string | null = null;
+    let avatarUrl: string | undefined;
+
     if (req.files && req.files.length > 0) {
       const uploadResult = await uploadImageToCloudinary(req.files[0].buffer);
-      avatarUrl = uploadResult;
+
+      if (typeof uploadResult === "string") {
+        avatarUrl = uploadResult;
+      } else {
+        console.error("Upload result is not a string:", uploadResult);
+      }
     }
 
     const user = await userService.createUser({
@@ -58,12 +67,14 @@ export const register = async (req: Request, res: Response) => {
     });
 
     return responseHandler(res, 201, "User registered successfully", user);
-  } catch (error: any) {
-    console.error("Register Error:", error);
+  } catch (error) {
+    const customError = error as CustomError;
+
+    console.error("Register Error:", customError);
 
     if (
-      error.code === "P2002" &&
-      error.meta?.target?.includes("mobileNumber")
+      customError.code === "P2002" &&
+      customError.meta?.target?.includes("mobileNumber")
     ) {
       return responseHandler(
         res,
@@ -76,7 +87,7 @@ export const register = async (req: Request, res: Response) => {
       res,
       500,
       "An unexpected error occurred while registering the user. Please try again later.",
-      error
+      customError
     );
   }
 };
@@ -99,11 +110,15 @@ export const login = async (req: Request, res: Response) => {
       return responseHandler(res, 401, "Invalid email or password");
     }
 
+    await userService.updateUserStatus(user.id, true);
+
+    io.emit("userStatusChange", { userId: user.id, isOnline: true });
+
     const authToken = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    responseHandler(res, 200, "Login successful", {
+    return responseHandler(res, 200, "Login successful", {
       user: {
         id: user.id,
         fullName: user.fullName,
@@ -115,6 +130,24 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Login Error:", error);
+    return responseHandler(res, 500, "Internal Server Error");
+  }
+};
+
+export const logout = async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+  try {
+    if (!userId) {
+      return responseHandler(res, 400, "User  ID is required for logout");
+    }
+
+    await userService.updateUserStatus(userId, false);
+
+    io.emit("userStatusChange", { userId, isOnline: false });
+
+    responseHandler(res, 200, "Logout successful");
+  } catch (error) {
+    console.error("Logout Error:", error);
     responseHandler(res, 500, "Internal Server Error");
   }
 };
@@ -190,9 +223,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     return responseHandler(res, 200, "Password reset link sent to your email.");
   } catch (error) {
+    const errorMessage =
+      (error as Error).message || "An unexpected error occurred";
     console.error("Forgot Password Error:", error);
     return responseHandler(res, 500, "Error sending reset link", {
-      error: error.message,
+      error: errorMessage,
     });
   }
 };
@@ -230,9 +265,11 @@ export const resetPassword = async (req: Request, res: Response) => {
 
     return responseHandler(res, 200, "Password reset successfully");
   } catch (error) {
+    const errorMessage =
+      (error as Error).message || "An unexpected error occurred";
     console.error("Reset Password Error:", error);
-    return responseHandler(res, 400, "Invalid or expired token", {
-      error: error.message,
+    return responseHandler(res, 500, "Error resetting password", {
+      error: errorMessage,
     });
   }
 };

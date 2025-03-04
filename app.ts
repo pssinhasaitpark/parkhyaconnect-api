@@ -4,25 +4,33 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import http from "http";
 import { Server } from "socket.io";
-import userRoutes from "./app/routes/user";
-import authRoutes from "./app/routes/auth";
-import messageRoutes from "./app/routes/message";
-import channelRoutes from "./app/routes/channel";
-import testRoute from "./app/routes/testRoute";
+import {
+  userRoutes,
+  authRoutes,
+  messageRoutes,
+  channelRoutes,
+  testRoute,
+} from "./app/routes";
 import { initKafka, producer } from "./app/kafka/kafka";
-import * as userService from './app/services/user.service';
+import * as userService from "./app/services/user.service";
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 
-const allowedOrigins = ["http://localhost:3000", "http://localhost:5173","http://localhost:5174"];
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://localhost:5174",
+];
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
 const io = new Server(server, {
   cors: {
@@ -46,8 +54,6 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/channels", channelRoutes);
 app.use("/api", testRoute);
 
-
-
 app.get("/", (req: Request, res: Response) => {
   res.status(200).send({
     message: "Welcome to Parkhya Connect!",
@@ -58,7 +64,10 @@ app.get("/", (req: Request, res: Response) => {
 
 if (KAFKA_ENABLED) {
   initKafka(io).catch((err) => {
-    console.error("Kafka initialization failed, continuing without Kafka:", err.message);
+    console.error(
+      "Kafka initialization failed, continuing without Kafka:",
+      err.message
+    );
   });
 }
 
@@ -71,7 +80,6 @@ io.on("connection", (socket) => {
     userService.updateUserStatus(userId, true);
     io.emit("userStatusChange", { userId, isOnline: true });
   }
-  
 
   socket.on("sendMessage", async (data) => {
     console.log("Received message:", data);
@@ -85,7 +93,10 @@ io.on("connection", (socket) => {
           messages: [{ value: JSON.stringify({ content, senderId }) }],
         });
       } catch (error: unknown) {
-        console.error("Failed to send message to Kafka:", (error as Error).message);
+        console.error(
+          "Failed to send message to Kafka:",
+          (error as Error).message
+        );
       }
     }
 
@@ -96,8 +107,8 @@ io.on("connection", (socket) => {
     console.log("A user disconnected");
 
     if (userId) {
-      userService.updateUserStatus(userId, false); 
-      io.emit("userStatusChange", { userId, isOnline: false }); 
+      userService.updateUserStatus(userId, false);
+      io.emit("userStatusChange", { userId, isOnline: false });
     }
   });
 });

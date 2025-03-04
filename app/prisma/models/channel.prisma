@@ -16,7 +16,7 @@ model ChannelMember {
   id         String   @id @default(uuid())
   channelId  String
   userId     String
-  role       String   @default("member") // "admin" or "member"
+  role       String   @default("member")
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 

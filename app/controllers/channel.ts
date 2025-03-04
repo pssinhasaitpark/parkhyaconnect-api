@@ -4,11 +4,18 @@ import { io } from "../../app";
 
 const prisma = new PrismaClient();
 
-// Create a new channel
 export const createChannel = async (req: Request, res: Response) => {
   try {
     const { name, description, isPrivate = false } = req.body;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized: User not found",
+        error: true,
+        status: 401,
+      });
+    }
 
     if (!name) {
       return res.status(400).json({
@@ -54,6 +61,14 @@ export const createChannel = async (req: Request, res: Response) => {
       },
     });
 
+    if (!channelWithMembers) {
+      return res.status(404).json({
+        message: "Channel not found",
+        error: true,
+        status: 404,
+      });
+    }
+
     const formattedChannel = {
       ...channelWithMembers,
       members: channelWithMembers.members.map((member) => member.user),
@@ -77,10 +92,9 @@ export const createChannel = async (req: Request, res: Response) => {
   }
 };
 
-// Get all channels the user is a member of
 export const getChannels = async (req: Request, res: Response) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
     const channelMembers = await prisma.channelMember.findMany({
       where: { userId },
@@ -126,11 +140,18 @@ export const getChannels = async (req: Request, res: Response) => {
   }
 };
 
-// Get a specific channel by ID
 export const getChannelById = async (req: Request, res: Response) => {
   try {
     const { channelId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized: User not found",
+        error: true,
+        status: 401,
+      });
+    }
 
     const membership = await prisma.channelMember.findUnique({
       where: {
@@ -201,13 +222,21 @@ export const addChannelMember = async (req: Request, res: Response) => {
   try {
     const { channelId } = req.params;
     const { userId } = req.body;
-    const currentUserId = req.user.id;
+    const currentUserId = req.user?.id;
 
     if (!userId) {
       return res.status(400).json({
         message: "User ID is required",
         error: true,
         status: 400,
+      });
+    }
+
+    if (!currentUserId) {
+      return res.status(401).json({
+        message: "Unauthorized: User not found",
+        error: true,
+        status: 401,
       });
     }
 
@@ -284,12 +313,19 @@ export const addChannelMember = async (req: Request, res: Response) => {
       },
     });
 
+    if (!updatedChannel) {
+      return res.status(404).json({
+        message: "Channel not found",
+        error: true,
+        status: 404,
+      });
+    }
+
     const formattedChannel = {
       ...updatedChannel,
       members: updatedChannel.members.map((member) => member.user),
     };
 
-    // Emit socket event for member added
     io.emit("channelMemberAdded", {
       channelId,
       user: userToAdd,
@@ -311,11 +347,18 @@ export const addChannelMember = async (req: Request, res: Response) => {
   }
 };
 
-// Remove a member from a channel
 export const removeChannelMember = async (req: Request, res: Response) => {
   try {
     const { channelId, userId } = req.params;
-    const currentUserId = req.user.id;
+    const currentUserId = req.user?.id;
+
+    if (!currentUserId) {
+      return res.status(401).json({
+        message: "Unauthorized: User not found",
+        error: true,
+        status: 401,
+      });
+    }
 
     const membership = await prisma.channelMember.findUnique({
       where: {
@@ -389,12 +432,18 @@ export const removeChannelMember = async (req: Request, res: Response) => {
   }
 };
 
-// Get messages for a specific channel
 export const getChannelMessages = async (req: Request, res: Response) => {
   try {
     const { channelId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized: User not found",
+        error: true,
+        status: 401,
+      });
+    }
     const membership = await prisma.channelMember.findUnique({
       where: {
         channelId_userId: {
@@ -448,11 +497,10 @@ export const getChannelMessages = async (req: Request, res: Response) => {
   }
 };
 
-// Delete a channel (only by the creator)
 export const deleteChannel = async (req: Request, res: Response) => {
   try {
     const { channelId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user?.id;
 
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },
@@ -495,12 +543,19 @@ export const deleteChannel = async (req: Request, res: Response) => {
   }
 };
 
-// Update a channel (name, description, privacy)
 export const updateChannel = async (req: Request, res: Response) => {
   try {
     const { channelId } = req.params;
     const { name, description, isPrivate } = req.body;
-    const userId = req.user.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized: User not found",
+        error: true,
+        status: 401,
+      });
+    }
 
     const channel = await prisma.channel.findUnique({
       where: { id: channelId },

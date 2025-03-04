@@ -6,7 +6,15 @@ const prisma = new PrismaClient();
 
 export const sendMessage = async (req: Request, res: Response) => {
   const { content, receiverId, channelId, type = "public" } = req.body;
-  const senderId = req.user.id;
+  const senderId = req.user?.id;
+
+  if (!senderId) {
+    return res.status(401).json({
+      message: "Unauthorized: User not found",
+      error: true,
+      status: 401,
+    });
+  }
 
   try {
     if (!["public", "private", "channel"].includes(type)) {
@@ -96,25 +104,30 @@ export const sendMessage = async (req: Request, res: Response) => {
       status: 201,
     });
   } catch (error) {
+    let message = "An unknown error occurred";
+
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
     console.error("Error sending message:", error);
     res.status(500).json({
       message: "Error sending message",
       error: true,
       status: 500,
-      details: error.message,
+      details: message,
     });
   }
 };
 
 export const getMessages = async (req: Request, res: Response) => {
   const { receiverId } = req.params;
-  const senderId = req.user.id;
+  const senderId = req.user?.id;
 
   try {
     let messages;
 
     if (receiverId) {
-      // Fetch Private Messages
       const receiver = await prisma.user.findUnique({
         where: { id: receiverId },
       });
@@ -150,7 +163,6 @@ export const getMessages = async (req: Request, res: Response) => {
         },
       });
     } else {
-      // Fetch Public Messages (Visible to everyone)
       messages = await prisma.message.findMany({
         where: { type: "public" },
         include: {
@@ -176,12 +188,18 @@ export const getMessages = async (req: Request, res: Response) => {
       status: 200,
     });
   } catch (error) {
+    let message = "An unknown error occurred";
+
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
     console.error("Error fetching messages:", error);
     res.status(500).json({
       message: "Error fetching messages",
       error: true,
       status: 500,
-      details: error.message,
+      details: message,
     });
   }
 };
@@ -189,7 +207,7 @@ export const getMessages = async (req: Request, res: Response) => {
 export const updateMessage = async (req: Request, res: Response) => {
   const { messageId } = req.params;
   const { content } = req.body;
-  const userId = req.user.id;
+  const userId = req.user?.id;
 
   try {
     const message = await prisma.message.findUnique({
@@ -231,7 +249,6 @@ export const updateMessage = async (req: Request, res: Response) => {
       },
     });
 
-    // Emit socket event for updated message
     io.emit("messageUpdated", updatedMessage);
 
     res.status(200).json({
@@ -241,19 +258,25 @@ export const updateMessage = async (req: Request, res: Response) => {
       status: 200,
     });
   } catch (error) {
+    let message = "An unknown error occurred";
+
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
     console.error("Error updating message:", error);
     res.status(500).json({
       message: "Error updating message",
       error: true,
       status: 500,
-      details: error.message,
+      details: message,
     });
   }
 };
 
 export const deleteMessage = async (req: Request, res: Response) => {
   const { messageId } = req.params;
-  const userId = req.user.id;
+  const userId = req.user?.id;
 
   try {
     const message = await prisma.message.findUnique({
@@ -272,7 +295,6 @@ export const deleteMessage = async (req: Request, res: Response) => {
 
     await prisma.message.delete({ where: { id: messageId } });
 
-    // Emit socket event for deleted message
     io.emit("messageDeleted", { messageId });
 
     res.status(200).json({
@@ -281,12 +303,18 @@ export const deleteMessage = async (req: Request, res: Response) => {
       status: 200,
     });
   } catch (error) {
+    let message = "An unknown error occurred";
+
+    if (error instanceof Error) {
+      message = error.message;
+    }
+
     console.error("Error deleting message:", error);
     res.status(500).json({
       message: "Error deleting message",
       error: true,
       status: 500,
-      details: error.message,
+      details: message,
     });
   }
 };
