@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import { io } from "../../app";
+import { producer } from "../kafka/kafka";
 
 const prisma = new PrismaClient();
 
@@ -93,6 +94,11 @@ export const sendMessage = async (req: Request, res: Response) => {
           },
         },
       },
+    });
+
+    await producer.send({
+      topic: "messages",
+      messages: [{ value: JSON.stringify(message) }],
     });
 
     io.emit("newMessage", message);

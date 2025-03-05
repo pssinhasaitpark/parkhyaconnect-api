@@ -19,9 +19,10 @@
     "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "prisma": {
-    "schema": "app/prisma/schema.prisma"
-  },
+"prisma": {
+  "schema": "./app/prisma/schema.prisma",
+  "seed": "ts-node ./app/prisma/seed.ts" 
+},
   "dependencies": {
     "@types/morgan": "^1.9.9",
     "@types/socket.io": "^3.0.1",

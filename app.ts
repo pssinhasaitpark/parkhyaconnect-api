@@ -4,20 +4,17 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import http from "http";
 import { Server } from "socket.io";
-import {
-  userRoutes,
-  authRoutes,
-  messageRoutes,
-  channelRoutes,
-  testRoute,
-} from "./app/routes";
+import { applyMigrations } from "./app/helpers/helper";
 import { initKafka, producer } from "./app/kafka/kafka";
 import * as userService from "./app/services/user.service";
+import {userRoutes,authRoutes,messageRoutes,channelRoutes,testRoute,} from "./app/routes";
 
 dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
+
+applyMigrations();
 
 const allowedOrigins = [
   "http://localhost:3000",
