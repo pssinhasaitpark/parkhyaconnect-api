@@ -13,8 +13,8 @@ model Message {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  senderId   String
-  receiverId String?
+  senderId   String @default(uuid())
+  receiverId String? @default(uuid())
 
   type String
 
@@ -75,3 +75,4 @@ model ChannelMember {
 
   @@unique([channelId, userId])
 }
+
