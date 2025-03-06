@@ -13,7 +13,7 @@ model Message {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  senderId   String @default(uuid())
+  senderId   String  @default(uuid())
   receiverId String? @default(uuid())
 
   type String
@@ -23,6 +23,9 @@ model Message {
 
   channelId String?
   channel   Channel? @relation(fields: [channelId], references: [id])
+
+  seen   Boolean  @default(false)
+  seenBy String[] @default([])
 
   @@index([type])
 }
@@ -75,4 +78,3 @@ model ChannelMember {
 
   @@unique([channelId, userId])
 }
-

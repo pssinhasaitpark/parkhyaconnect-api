@@ -8,7 +8,6 @@ router.get("/", userController.getUsers);
 router.get("/:id", userController.getUserById);
 router.put("/:id", upload, convertImagesToWebP, userController.updateUser);
 router.delete("/:id", userController.deleteUser);
-
 router.post("/:id/status", userController.updateUserStatus);
 
 export default router;
