@@ -114,9 +114,7 @@ export const login = async (req: Request, res: Response) => {
 
     io.emit("userStatusChange", { userId: user.id, isOnline: true });
 
-    const authToken = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
+    const authToken = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET,  { expiresIn: process.env.JWT_EXPIRES_IN});
 
     return responseHandler(res, 200, "Login successful", {
       user: {
