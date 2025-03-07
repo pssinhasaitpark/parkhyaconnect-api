@@ -27,7 +27,22 @@ model Message {
   seen   Boolean  @default(false)
   seenBy String[] @default([])
 
+  reactions Reaction[] @relation("MessageReactions")
+
   @@index([type])
+}
+
+model Reaction {
+  id         String   @id @default(uuid())
+  messageId  String
+  userId     String
+  type       String   
+  created_at DateTime @default(now())
+
+  message Message @relation("MessageReactions", fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation("User Reactions", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
 }
 
 model User {
@@ -49,6 +64,8 @@ model User {
 
   createdChannels    Channel[]       @relation("CreatedChannels")
   channelMemberships ChannelMember[]
+
+  reactions Reaction[] @relation("User Reactions")
 }
 
 model Channel {

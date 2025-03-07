@@ -127,9 +127,9 @@ export const sendMessage = async (req: Request, res: Response) => {
 };
 
 export const getMessages = async (req: Request, res: Response) => {
-  const { receiverId } = req.query;  // Fetch receiverId from query params
+  const { receiverId } = req.query; // Fetch receiverId from query params
   const senderId = req.user?.id;
-  
+
   const { page = 1, limit = 10, content, type } = req.query;
 
   try {
@@ -150,7 +150,7 @@ export const getMessages = async (req: Request, res: Response) => {
         ...query.where,
         content: {
           contains: content as string,
-          mode: "insensitive", 
+          mode: "insensitive",
         },
       };
     }
@@ -164,7 +164,7 @@ export const getMessages = async (req: Request, res: Response) => {
 
     if (receiverId) {
       const receiver = await prisma.user.findUnique({
-        where: { id: receiverId as string },  // Convert receiverId to string if necessary
+        where: { id: receiverId as string }, // Convert receiverId to string if necessary
       });
 
       if (!receiver) {
@@ -181,9 +181,8 @@ export const getMessages = async (req: Request, res: Response) => {
           { senderId: senderId, receiverId: receiverId },
           { senderId: receiverId, receiverId: senderId },
         ],
-        type: "private", 
+        type: "private",
       };
-
     } else {
       query.where = {
         ...query.where,
@@ -373,7 +372,9 @@ export const markMessageAsSeen = async (req: Request, res: Response) => {
     });
 
     if (!message) {
-      return res.status(404).json({ message: "Message not found", error: true });
+      return res
+        .status(404)
+        .json({ message: "Message not found", error: true });
     }
 
     if (!message.seenBy.includes(userId)) {
@@ -429,7 +430,9 @@ export const getSeenUsers = async (req: Request, res: Response) => {
     });
 
     if (!message) {
-      return res.status(404).json({ message: "Message not found", error: true });
+      return res
+        .status(404)
+        .json({ message: "Message not found", error: true });
     }
 
     const seenUsers = await prisma.user.findMany({
@@ -463,6 +466,110 @@ export const getSeenUsers = async (req: Request, res: Response) => {
       error: true,
       status: 500,
       details: message,
+    });
+  }
+};
+
+export const addReaction = async (req: Request, res: Response) => {
+  const { messageId } = req.params;
+  const { type } = req.body;
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json({
+      message: "Unauthorized: User not found",
+      error: true,
+      status: 401,
+    });
+  }
+
+  try {
+    const message = await prisma.message.findUnique({
+      where: { id: messageId },
+    });
+
+    if (!message) {
+      return res.status(404).json({
+        message: "Message not found",
+        error: true,
+        status: 404,
+      });
+    }
+
+    const existingReaction = await prisma.reaction.findUnique({
+      where: {
+        messageId_userId: {
+          messageId,
+          userId,
+        },
+      },
+    });
+
+    if (existingReaction) {
+      return res.status(400).json({
+        message: "User  has already reacted to this message",
+        error: true,
+        status: 400,
+      });
+    }
+
+    const reaction = await prisma.reaction.create({
+      data: {
+        messageId,
+        userId,
+        type,
+      },
+    });
+
+    io.emit("newReaction", reaction);
+
+    res.status(201).json({
+      message: "Reaction added successfully",
+      data: reaction,
+      error: false,
+      status: 201,
+    });
+  } catch (error) {
+    console.error("Error adding reaction:", error);
+    res.status(500).json({
+      message: "Error adding reaction",
+      error: true,
+      status: 500,
+      details: error.message,
+    });
+  }
+};
+
+export const getReactions = async (req: Request, res: Response) => {
+  const { messageId } = req.params;
+
+  try {
+    const reactions = await prisma.reaction.findMany({
+      where: { messageId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json({
+      message: "Reactions fetched successfully",
+      data: reactions,
+      error: false,
+      status: 200,
+    });
+  } catch (error) {
+    console.error("Error fetching reactions:", error);
+    res.status(500).json({
+      message: "Error fetching reactions",
+      error: true,
+      status: 500,
+      details: error.message,
     });
   }
 };
